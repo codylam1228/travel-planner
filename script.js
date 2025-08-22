@@ -250,21 +250,55 @@ function initializeApp() {
     // File input for importing
     document.getElementById('importFileInput').addEventListener('change', handleImportFile);
     
-    // Date inputs with improved validation
-    document.getElementById('startDate').addEventListener('change', function() {
-        // Set minimum date for end date to prevent selecting earlier dates
-        const startDate = this.value;
-        const endDateInput = document.getElementById('endDate');
-        if (startDate && isValidDateString(startDate)) {
-            endDateInput.min = startDate;
-        }
-        debouncedUpdateTravelDates();
-    });
-    document.getElementById('endDate').addEventListener('change', debouncedUpdateTravelDates);
+    // Date inputs with picker-only functionality
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
 
-    // Also listen for blur events to catch manual typing
-    document.getElementById('startDate').addEventListener('blur', debouncedUpdateTravelDates);
-    document.getElementById('endDate').addEventListener('blur', debouncedUpdateTravelDates);
+    // Prevent manual typing but allow date picker
+    [startDateInput, endDateInput].forEach(input => {
+        // Prevent keyboard input except for Tab and arrow keys (for accessibility)
+        input.addEventListener('keydown', function(e) {
+            // Allow Tab, Shift+Tab, and arrow keys for navigation
+            const allowedKeys = ['Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape'];
+            if (!allowedKeys.includes(e.key)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Prevent text input but allow date picker interaction
+        input.addEventListener('keypress', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // Prevent paste
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // Open date picker on click
+        input.addEventListener('click', function() {
+            try {
+                if (this.showPicker) {
+                    this.showPicker();
+                }
+            } catch (e) {
+                // Fallback for browsers that don't support showPicker()
+                this.focus();
+            }
+        });
+
+        // Handle date picker changes
+        input.addEventListener('change', function() {
+            // Set minimum date for end date to prevent selecting earlier dates
+            if (this.id === 'startDate' && this.value) {
+                endDateInput.min = this.value;
+            }
+            debouncedUpdateTravelDates();
+        });
+    });
     
     // Location modal events
     const locationModal = document.getElementById('locationModal');
@@ -355,23 +389,32 @@ function addNewDay() {
         return;
     }
 
+    // Convert to ISO format for calculation
+    const startDateISO = convertToISODate(startDate);
+    const endDateISO = convertToISODate(endDate);
+
+    if (!startDateISO) {
+        alert('Please enter a valid start date in DD/MM/YYYY format');
+        return;
+    }
+
     // Calculate the date for the new day
     const dayNumber = travelPlan.days.length + 1;
-    const dayDate = new Date(startDate);
+    const dayDate = new Date(startDateISO);
     dayDate.setDate(dayDate.getDate() + (dayNumber - 1));
     const newDayDateStr = dayDate.toISOString().split('T')[0];
 
     // Check if end date is set and validate against it
-    if (endDate) {
-        const endDateObj = new Date(endDate);
+    if (endDate && endDateISO) {
+        const endDateObj = new Date(endDateISO);
         const newDayDateObj = new Date(newDayDateStr);
 
         if (newDayDateObj > endDateObj) {
             // Calculate maximum allowed days
-            const startDateObj = new Date(startDate);
+            const startDateObj = new Date(startDateISO);
             const maxDays = Math.floor((endDateObj - startDateObj) / (1000 * 60 * 60 * 24)) + 1;
 
-            alert(`Cannot add more days. Your trip is from ${formatDate(startDate)} to ${formatDate(endDate)} (${maxDays} day${maxDays > 1 ? 's' : ''} total).\n\nTo add more days, please extend your end date first.`);
+            alert(`Cannot add more days. Your trip is from ${startDate} to ${endDate} (${maxDays} day${maxDays > 1 ? 's' : ''} total).\n\nTo add more days, please extend your end date first.`);
             return;
         }
     }
@@ -395,6 +438,9 @@ function addNewDay() {
 function renderDays() {
     const daysList = document.getElementById('daysList');
     daysList.innerHTML = '';
+
+    // Ensure days don't exceed date range before rendering
+    cleanupExcessDays();
 
     travelPlan.days.forEach(day => {
         const dayCard = createDayCard(day);
@@ -1112,11 +1158,60 @@ function getColorForDay(dayIndex) {
 
 
 
+// Convert date to ISO format (HTML date inputs use YYYY-MM-DD internally)
+function convertToISODate(dateStr) {
+    if (!dateStr) return '';
+
+    // HTML date inputs already provide YYYY-MM-DD format
+    const yyyymmddPattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (yyyymmddPattern.test(dateStr)) {
+        return dateStr;
+    }
+
+    // Handle DD-MM-YYYY or DD/MM/YYYY format (for backward compatibility)
+    const ddmmyyyyPattern = /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/;
+    const match = dateStr.match(ddmmyyyyPattern);
+
+    if (match) {
+        const [, day, month, year] = match;
+        // Pad day and month with leading zeros if needed
+        const paddedDay = day.padStart(2, '0');
+        const paddedMonth = month.padStart(2, '0');
+        return `${year}-${paddedMonth}-${paddedDay}`;
+    }
+
+    return ''; // Invalid format
+}
+
+// Convert YYYY-MM-DD to DD/MM/YYYY format for display (when needed)
+function convertToDisplayDate(isoDateStr) {
+    if (!isoDateStr) return '';
+
+    const yyyymmddPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const match = isoDateStr.match(yyyymmddPattern);
+
+    if (match) {
+        const [, year, month, day] = match;
+        // Remove leading zeros and format as DD/MM/YYYY
+        const displayDay = parseInt(day, 10);
+        const displayMonth = parseInt(month, 10);
+        return `${displayDay}/${displayMonth}/${year}`;
+    }
+
+    return isoDateStr; // Return as is if not in expected format
+}
+
 // Check if a date string is valid and complete
 function isValidDateString(dateStr) {
-    if (!dateStr || dateStr.length < 10) return false; // YYYY-MM-DD format
-    const date = new Date(dateStr);
-    return date instanceof Date && !isNaN(date) && dateStr === date.toISOString().split('T')[0];
+    if (!dateStr) return false;
+
+    // Convert to ISO format for validation
+    const isoDate = convertToISODate(dateStr);
+    if (!isoDate) return false;
+
+    // Validate the converted date
+    const date = new Date(isoDate);
+    return date instanceof Date && !isNaN(date) && isoDate === date.toISOString().split('T')[0];
 }
 
 // Debounced version of updateTravelDates to avoid premature validation
@@ -1140,10 +1235,14 @@ function updateTravelDates() {
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
 
+    // Convert dates to ISO format for processing
+    const startDateISO = convertToISODate(startDate);
+    const endDateISO = convertToISODate(endDate);
+
     // Only validate if both dates are complete and valid
     if (startDate && endDate && isValidDateString(startDate) && isValidDateString(endDate)) {
-        const startDateObj = new Date(startDate);
-        const endDateObj = new Date(endDate);
+        const startDateObj = new Date(startDateISO);
+        const endDateObj = new Date(endDateISO);
 
         if (endDateObj < startDateObj) {
             // Show error message
@@ -1151,7 +1250,7 @@ function updateTravelDates() {
 
             // Reset the end date to match start date
             endDateInput.value = startDate;
-            travelPlan.endDate = startDate;
+            travelPlan.endDate = startDateISO;
 
             // Add visual feedback
             endDateInput.style.borderColor = '#ef4444';
@@ -1167,28 +1266,71 @@ function updateTravelDates() {
         }
     }
 
-    // Only update if dates are valid or empty
+    // Store dates in ISO format internally
     if (!startDate || isValidDateString(startDate)) {
-        travelPlan.startDate = startDate;
+        travelPlan.startDate = startDateISO;
     }
     if (!endDate || isValidDateString(endDate)) {
-        travelPlan.endDate = endDate;
+        travelPlan.endDate = endDateISO;
     }
 
     // Update day dates if start date changed and is valid
     if (startDate && isValidDateString(startDate)) {
         travelPlan.days.forEach((day, index) => {
-            const dayDate = new Date(startDate);
+            const dayDate = new Date(startDateISO);
             dayDate.setDate(dayDate.getDate() + index);
             day.date = dayDate.toISOString().split('T')[0];
         });
-        renderDays();
     }
+
+    // Clean up excess days that exceed the date range
+    cleanupExcessDays();
 
     // Update Add Day button state
     updateAddDayButtonState();
 
+    // Re-render after cleanup
+    renderDays();
     saveTravelPlan();
+}
+
+// Clean up days that exceed the date range
+function cleanupExcessDays() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    // Only cleanup if both dates are set and valid
+    if (!startDate || !endDate || !isValidDateString(startDate) || !isValidDateString(endDate)) {
+        return;
+    }
+
+    const startDateISO = convertToISODate(startDate);
+    const endDateISO = convertToISODate(endDate);
+    const startDateObj = new Date(startDateISO);
+    const endDateObj = new Date(endDateISO);
+
+    // Calculate maximum allowed days
+    const maxDays = Math.floor((endDateObj - startDateObj) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Remove excess days
+    if (travelPlan.days.length > maxDays) {
+        const removedDays = travelPlan.days.length - maxDays;
+        travelPlan.days = travelPlan.days.slice(0, maxDays);
+
+        console.log(`Removed ${removedDays} excess day(s) that exceeded the date range`);
+
+        // Show user notification if days were removed
+        if (removedDays > 0) {
+            setTimeout(() => {
+                alert(`Removed ${removedDays} day(s) that exceeded your trip dates. Your trip is ${maxDays} day${maxDays > 1 ? 's' : ''} long from ${convertToDisplayDate(startDateISO)} to ${convertToDisplayDate(endDateISO)}.`);
+            }, 100);
+        }
+    }
+
+    // Renumber remaining days
+    travelPlan.days.forEach((day, index) => {
+        day.number = index + 1;
+    });
 }
 
 // Update the Add Day button state based on date constraints
@@ -1207,16 +1349,28 @@ function updateAddDayButtonState() {
         return;
     }
 
+    // Convert to ISO format for calculation
+    const startDateISO = convertToISODate(startDate);
+    const endDateISO = convertToISODate(endDate);
+
+    if (!startDateISO || !endDateISO) {
+        // Invalid dates, enable button but show warning
+        addDayBtn.disabled = false;
+        addDayBtn.title = 'Add Day (please enter valid dates)';
+        addDayBtn.style.opacity = '';
+        return;
+    }
+
     // Calculate if we can add more days
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+    const startDateObj = new Date(startDateISO);
+    const endDateObj = new Date(endDateISO);
     const maxDays = Math.floor((endDateObj - startDateObj) / (1000 * 60 * 60 * 24)) + 1;
     const currentDays = travelPlan.days.length;
 
     if (currentDays >= maxDays) {
         // Disable button if we've reached the limit
         addDayBtn.disabled = true;
-        addDayBtn.title = `Cannot add more days. Trip is ${maxDays} day${maxDays > 1 ? 's' : ''} long (${formatDate(startDate)} to ${formatDate(endDate)})`;
+        addDayBtn.title = `Cannot add more days. Trip is ${maxDays} day${maxDays > 1 ? 's' : ''} long (${convertToDisplayDate(startDateISO)} to ${convertToDisplayDate(endDateISO)})`;
         addDayBtn.style.opacity = '0.5';
     } else {
         // Enable button if we can add more days
@@ -1532,7 +1686,7 @@ function importTravelPlan(importedData) {
         getCombinedItems(day); // This will migrate old structure to new if needed
     });
     
-    // Update the UI
+    // Update the UI - HTML date inputs expect YYYY-MM-DD format
     document.getElementById('startDate').value = travelPlan.startDate;
     document.getElementById('endDate').value = travelPlan.endDate;
     
@@ -1705,6 +1859,7 @@ function loadTravelPlan() {
     if (saved) {
         try {
             travelPlan = JSON.parse(saved);
+            // HTML date inputs expect YYYY-MM-DD format
             document.getElementById('startDate').value = travelPlan.startDate || '';
             document.getElementById('endDate').value = travelPlan.endDate || '';
             renderDays();

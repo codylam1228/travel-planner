@@ -175,11 +175,19 @@ body {
     border-radius: 6px;
     font-size: 16px; /* Prevent zoom on iOS */
     transition: border-color 0.3s ease;
+    width: 140px;
+    text-align: center;
+    cursor: pointer;
 }
 
 .date-input:focus {
     outline: none;
     border-color: #667eea;
+}
+
+.date-input:hover {
+    border-color: #667eea;
+    background-color: #f8f9ff;
 }
 
 /* Days Container */
