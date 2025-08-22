@@ -31,24 +31,38 @@ A beautiful, interactive travel planning website that helps you organize your tr
    - Go to your dashboard and create a new API token
    - Copy your API access token
 
-2. **Configure the API Key** (Optional):
-   - **For Local Development**: Copy `config.example.js` to `config.js` and add your LocationIQ API key
-   - **For GitHub Pages**: No configuration needed! The app works without an API key using OpenStreetMap's free geocoding service
+2. **Configure the API Key**:
+   - **For Local Development**: Copy `config.local.example.js` to `config.js` and add your LocationIQ API key
+   - **For GitHub Pages**: Add your API key to GitHub Secrets (see deployment section below)
 
 3. **Run the Application**:
    - **Local**: Simply open `index.html` in your web browser
    - **GitHub Pages**: Push to GitHub and enable Pages in repository settings
    - **Local Server**: Use `python -m http.server` or similar for full functionality
 
-## 🌐 GitHub Pages Deployment
+## 🌐 GitHub Pages Deployment with LocationIQ API
 
-This application is designed to work perfectly on GitHub Pages without any configuration:
+This application uses GitHub Actions to securely deploy with your LocationIQ API key:
 
-1. **Push to GitHub**: Upload all files except `config.js` to your repository
-2. **Enable Pages**: Go to Settings → Pages → Source: Deploy from branch → main
-3. **Access**: Your app will be available at `https://yourusername.github.io/repository-name`
+### **Automatic Deployment Setup:**
 
-**No API Key Required**: The app automatically falls back to OpenStreetMap's free Nominatim geocoding service when no LocationIQ API key is configured, making it perfect for public GitHub Pages deployment.
+1. **Add API Key to GitHub Secrets**:
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `LOCATIONIQ_API_KEY`
+   - Value: Your LocationIQ API key
+
+2. **Enable GitHub Pages**:
+   - Go to Settings → Pages
+   - Source: Select "GitHub Actions"
+   - Save settings
+
+3. **Deploy**:
+   - Push your code to the `main` branch
+   - GitHub Actions will automatically build and deploy your site
+   - Your app will be available at `https://yourusername.github.io/repository-name`
+
+**Secure API Key Handling**: Your API key is stored securely in GitHub Secrets and injected during build time, never exposed in your public repository.
 
 ### Using a Local Server (Recommended for Development)
 
