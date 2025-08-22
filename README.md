@@ -1,11 +1,12 @@
 # 🗺️ Travel Planner
 
-A beautiful, interactive travel planning website that helps you organize your trips day by day with LocationIQ geocoding and OpenStreetMap integration.
+A beautiful, interactive travel planning website that helps you organize your trips day by day with LocationIQ geocoding, OpenStreetMap visualization, and Google Maps navigation.
 
 ## ✨ Features
 
 - **Day-by-Day Planning**: Organize your travel itinerary by days
 - **Interactive Maps**: OpenStreetMap-based interactive map with Leaflet.js
+- **Google Maps Navigation**: Direct links to Google Maps for turn-by-turn navigation
 - **Location Management**: Add, edit, and remove locations for each day
 - **Smart Geocoding**: Powered by LocationIQ for accurate address-to-coordinate conversion
 - **Visual Markers**: Color-coded markers for each day

@@ -452,11 +452,64 @@ function createDayCard(day) {
     return dayCard;
 }
 
+// Generate smart Google Maps URL with fallback mechanism
+function generateGoogleMapsUrl(item) {
+    // Smart fallback logic for better Google Maps recognition
+    let query;
+
+    if (item.googleAddress && item.googleAddress.trim() && item.googleAddress.length > 10) {
+        // Use specific address if available and detailed enough
+        query = encodeURIComponent(item.googleAddress.trim());
+        console.log(`🗺️ Using address for ${item.name}: ${item.googleAddress}`);
+    } else if (item.name && isLikelyLandmark(item.name)) {
+        // Use name if it looks like a landmark or well-known place
+        query = encodeURIComponent(item.name.trim());
+        console.log(`🏛️ Using landmark name for ${item.name}`);
+    } else {
+        // Fallback to coordinates for generic names or missing addresses
+        query = `${item.lat},${item.lng}`;
+        console.log(`📍 Using coordinates for ${item.name}: ${item.lat},${item.lng}`);
+    }
+
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+// Check if a location name is likely a landmark or well-known place
+function isLikelyLandmark(name) {
+    if (!name || name.length < 3) return false;
+
+    const landmarkKeywords = [
+        'tower', 'temple', 'shrine', 'castle', 'palace', 'cathedral', 'church', 'mosque',
+        'museum', 'gallery', 'park', 'garden', 'bridge', 'station', 'airport', 'port',
+        'university', 'college', 'hospital', 'hotel', 'restaurant', 'cafe', 'mall',
+        'center', 'centre', 'building', 'plaza', 'square', 'market', 'beach', 'mountain',
+        'lake', 'river', 'island', 'zoo', 'aquarium', 'theater', 'theatre', 'stadium',
+        'arena', 'library', 'embassy', 'consulate', 'monument', 'memorial'
+    ];
+
+    const nameLower = name.toLowerCase();
+
+    // Check for landmark keywords
+    const hasLandmarkKeyword = landmarkKeywords.some(keyword => nameLower.includes(keyword));
+
+    // Check for proper nouns (capitalized words) - likely place names
+    const words = name.split(' ');
+    const hasProperNouns = words.some(word => word.length > 2 && word[0] === word[0].toUpperCase());
+
+    // Check if it's not too generic
+    const genericTerms = ['location', 'place', 'spot', 'area', 'point', 'here', 'there'];
+    const isNotGeneric = !genericTerms.some(term => nameLower.includes(term));
+
+    return (hasLandmarkKeyword || hasProperNouns) && isNotGeneric;
+}
+
 // Create location HTML with click functionality
 function createLocationHTML(item, dayId) {
+    const googleMapsUrl = generateGoogleMapsUrl(item);
+
     return `
-        <div class="location-item clickable draggable" 
-             data-item-id="${item.id}" 
+        <div class="location-item clickable draggable"
+             data-item-id="${item.id}"
              data-day-id="${dayId}"
              data-item-type="location"
              draggable="true">
@@ -478,11 +531,11 @@ function createLocationHTML(item, dayId) {
                 ${item.notes ? `<div class="location-notes">${item.notes}</div>` : ''}
                 ${item.googleAddress ? `
                     <div class="location-maps">
-                        <a href="https://www.openstreetmap.org/?mlat=${item.lat}&mlon=${item.lng}&zoom=16#map=16/${item.lat}/${item.lng}"
+                        <a href="${googleMapsUrl}"
                            target="_blank"
                            onclick="event.stopPropagation()"
                            class="maps-link">
-                            <i class="fas fa-directions"></i> Open in Maps
+                            <i class="fas fa-directions"></i> Open in Google Maps
                         </a>
                     </div>
                 ` : ''}
@@ -970,8 +1023,8 @@ function updateMapMarkers() {
             }
 
             // Popup content with navigation
-            // Use OpenStreetMap-based navigation (works with most map apps)
-            const navigationUrl = `https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}&zoom=16#map=16/${location.lat}/${location.lng}`;
+            // Use smart Google Maps navigation with fallback mechanism
+            const navigationUrl = generateGoogleMapsUrl(location);
             const popupContent = `
                 <div style="max-width: 200px;">
                     <h4 style="margin: 0 0 5px 0; color: #333;">${location.name}</h4>
@@ -983,7 +1036,7 @@ function updateMapMarkers() {
                     ${location.notes ? `<p style="margin: 0 0 8px 0; color: #666; font-size: 0.85em; font-style: italic;">${location.notes}</p>` : ''}
                     <div style="text-align: center; margin-top: 8px;">
                         <a href="${navigationUrl}" target="_blank" style="
-                            background: #667eea;
+                            background: #4285f4;
                             color: white;
                             padding: 6px 12px;
                             border-radius: 4px;
@@ -992,7 +1045,7 @@ function updateMapMarkers() {
                             display: inline-block;
                             font-weight: 500;
                         ">
-                            <i class="fas fa-directions"></i> Open in Maps
+                            <i class="fas fa-directions"></i> Open in Google Maps
                         </a>
                     </div>
                 </div>
