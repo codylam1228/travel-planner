@@ -18,21 +18,21 @@
           "type": "location",
           "startTime": "16:10",
           "endTime": "17:09",
-          "money": 0,
-          "currency": "USD"
+          "money": 106110,
+          "currency": "JPY"
         },
         {
           "id": "loc_1768452562274",
           "name": "日暮里車站",
           "googleAddress": "35.72827099773087, 139.77054483629746",
           "notes": "",
-          "lat": 35.7281495,
-          "lng": 139.7706579,
+          "lat": 35.72812,
+          "lng": 139.772873,
           "type": "location",
           "startTime": "18:18",
-          "endTime": "18:25",
-          "money": 0,
-          "currency": "USD"
+          "endTime": "19:09",
+          "money": 8700,
+          "currency": "JPY"
         },
         {
           "id": "loc_1768452830062",
@@ -44,8 +44,8 @@
           "type": "location",
           "startTime": "20:15",
           "endTime": "22:05",
-          "money": 0,
-          "currency": "USD"
+          "money": 34373,
+          "currency": "JPY"
         },
         {
           "id": "loc_1768453311379",
@@ -55,28 +55,51 @@
           "lat": 35.6624568,
           "lng": 139.7334981,
           "type": "location",
-          "startTime": "22:15",
+          "startTime": "22:10",
           "endTime": "23:10",
           "money": 0,
-          "currency": "USD"
-        },
-        {
-          "id": "travel_0",
-          "type": "travel",
-          "transport": "train",
-          "travelTime": "01:01"
+          "currency": "JPY"
         },
         {
           "id": "travel_1",
           "type": "travel",
           "transport": "train",
-          "travelTime": "00:30"
+          "travelTime": "00:30",
+          "mode": "auto"
         },
         {
           "id": "travel_2",
           "type": "travel",
+          "transport": "walking",
+          "travelTime": "00:05",
+          "mode": "auto",
+          "durationMinutes": 5
+        },
+        {
+          "id": "travel_0",
+          "type": "travel",
           "transport": "train",
-          "travelTime": "00:05"
+          "travelTime": "",
+          "mode": "auto"
+        },
+        {
+          "id": "loc_1768462466142",
+          "name": "Softlight Inn",
+          "googleAddress": "35.71784142904734, 139.79941550885144",
+          "startTime": "00:30",
+          "endTime": "",
+          "notes": "",
+          "money": 0,
+          "currency": "USD",
+          "lat": 35.7178863,
+          "lng": 139.7992632,
+          "type": "location"
+        },
+        {
+          "id": "travel_3",
+          "type": "travel",
+          "transport": "train",
+          "travelTime": ""
         }
       ]
     },
