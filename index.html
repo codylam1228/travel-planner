@@ -51,16 +51,13 @@
                 <div class="days-container">
                     <div class="days-header">
                         <h3>Daily Plans</h3>
-                        <button class="btn-secondary" id="addDayBtn">
-                            <i class="fas fa-plus"></i> Add Day
-                        </button>
                     </div>
                     <div id="daysList" class="days-list">
                         <!-- Days will be dynamically added here -->
                     </div>
                 </div>
 
-                <div class="sidebar-footer">
+                <div class="sidebar-footer" style="padding-left: 14px;">
                     <button class="btn-outline" id="importBtn">
                         <i class="fas fa-upload"></i> Import Plan
                     </button>
@@ -138,12 +135,32 @@
                         <small class="form-help">Coordinates auto-update when you change the address above</small>
                     </div>
                     <div class="form-group">
-                        <label for="locationTime">Time</label>
-                        <input type="time" id="locationTime">
+                        <label>Time</label>
+                        <div class="money-input-group">
+                            <input type="time" id="locationStartTime" aria-label="Start Time">
+                            <input type="time" id="locationEndTime" aria-label="End Time">
+                        </div>
+                        <small class="form-help">Start and end time for this activity</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="locationMoney">Money Spent (optional)</label>
+                        <div class="money-input-group">
+                            <input type="number" id="locationMoney" placeholder="Enter amount" step="0.01" min="0">
+                            <select id="locationCurrency" class="currency-select">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="JPY">JPY</option>
+                                <option value="CNY">CNY</option>
+                                <option value="INR">INR</option>
+                                <option value="AUD">AUD</option>
+                                <option value="CAD">CAD</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="locationNotes">Notes</label>
-                        <textarea id="locationNotes" rows="3"></textarea>
+                        <textarea id="locationNotes" rows="3" placeholder="Add comments or additional information about this activity"></textarea>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn-outline" id="cancelLocationBtn">Cancel</button>
@@ -170,6 +187,45 @@
                     <div class="form-actions">
                         <button type="button" class="btn-outline" id="cancelNoteBtn">Cancel</button>
                         <button type="submit" class="btn-primary">Add Note</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing travel -->
+    <div id="travelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Travel</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="travelForm">
+                    <div class="form-group">
+                        <label for="travelTransport">Travel Method</label>
+                        <select id="travelTransport" name="transport" class="form-control">
+                            <option value="">Select a travel method</option>
+                            <option value="walking" data-emoji="🚶">🚶 Walking</option>
+                            <option value="car" data-emoji="🚗">🚗 Private Car</option>
+                            <option value="bus" data-emoji="🚌">🚌 Bus</option>
+                            <option value="train" data-emoji="🚂">🚂 Train</option>
+                            <option value="subway" data-emoji="🚇">🚇 Subway/Metro</option>
+                            <option value="bicycle" data-emoji="🚴">🚴 Bicycle</option>
+                            <option value="airplane" data-emoji="✈️">✈️ Airplane</option>
+                            <option value="ferry" data-emoji="⛴️">⛴️ Ferry</option>
+                            <option value="tram" data-emoji="🚊">🚊 Tram</option>
+                            <option value="coffee break" data-emoji="☕">☕ Coffee Break</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="travelTime">Travel Time</label>
+                        <input type="time" id="travelTime">
+                        <small class="form-help">Estimated time for this travel segment</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-outline" id="cancelTravelBtn">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Travel</button>
                     </div>
                 </form>
             </div>
