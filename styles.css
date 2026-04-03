@@ -1454,3 +1454,214 @@ body {
     position: relative;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Expenses Styles */
+.expenses-container {
+    background: white;
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.expenses-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.expenses-header h2 {
+    color: #333;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.expenses-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.expenses-summary {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.total-expenses h3 {
+    color: #667eea;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.daily-breakdowns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.daily-breakdown {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.daily-breakdown h4 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.expenses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.expense-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #667eea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.expense-item .expense-info {
+    flex: 1;
+}
+
+.expense-item .expense-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.expense-item .expense-details {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.expense-item .expense-amount {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.expense-item .expense-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.expense-item .btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.expense-item .btn-small:hover {
+    background: #f0f0f0;
+}
+
+.expense-item .btn-small.delete {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.expense-item .btn-small.delete:hover {
+    background: #dc3545;
+    color: white;
+}
+
+/* Expense Modal */
+.expense-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.expense-modal.show {
+    display: flex;
+}
+
+.expense-modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.expense-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.expense-modal-header h3 {
+    color: #333;
+}
+
+.expense-modal .close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.expense-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.expense-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.expense-form input,
+.expense-form select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.expense-form input:focus,
+.expense-form select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.expense-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}

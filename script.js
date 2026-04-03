@@ -12,7 +12,17 @@ let travelPlan = {
     title: 'My Travel Plan',
     startDate: '',
     endDate: '',
-    days: []
+    days: [],
+    expenses: []
+};
+
+// Expenses variables
+let currentView = 'map'; // 'map' or 'expenses'
+let expenseFx = {
+    status: 'idle',
+    cacheDate: '',
+    providerDate: '',
+    ratesFromUSD: null
 };
 
 // LocationIQ API configuration
@@ -248,10 +258,19 @@ function initializeApp() {
     }
     document.getElementById('importBtn').addEventListener('click', openImportDialog);
     document.getElementById('exportBtn').addEventListener('click', exportTravelPlan);
+    document.getElementById('expensesBtn').addEventListener('click', toggleExpensesView);
     document.getElementById('clearBtn').addEventListener('click', clearAllData);
     
     // File input for importing
     document.getElementById('importFileInput').addEventListener('change', handleImportFile);
+    
+    // Expenses event listeners
+    document.getElementById('addExpenseBtn').addEventListener('click', openExpenseModal);
+    document.getElementById('refreshRatesBtn').addEventListener('click', refreshExchangeRates);
+    document.getElementById('sortExpenses').addEventListener('change', renderExpenses);
+    document.getElementById('expenseForm').addEventListener('submit', saveExpense);
+    document.getElementById('cancelExpenseBtn').addEventListener('click', closeExpenseModal);
+    document.querySelector('#expenseModal .close').addEventListener('click', closeExpenseModal);
     
     // Date inputs with picker-only functionality
     const startDateInput = document.getElementById('startDate');
@@ -2008,7 +2027,8 @@ function importTravelPlan(importedData) {
         title: importedData.title || 'My Travel Plan',
         startDate: importedData.startDate || '',
         endDate: importedData.endDate || '',
-        days: importedData.days || []
+        days: importedData.days || [],
+        expenses: importedData.expenses || []
     };
     
     // Ensure all days are migrated to the new structure
@@ -2180,18 +2200,20 @@ function validateTravelItem(travel) {
 
 // Clear all data
 function clearAllData() {
-    if (confirm('This will delete all your travel plans. Are you sure?')) {
+    if (confirm('This will delete all your travel plans and expenses. Are you sure?')) {
         travelPlan = {
             title: 'My Travel Plan',
             startDate: '',
             endDate: '',
-            days: []
+            days: [],
+            expenses: []
         };
         
         document.getElementById('startDate').value = '';
         document.getElementById('endDate').value = '';
         
         renderDays();
+        renderExpenses();
         saveTravelPlan();
     }
 }
@@ -2784,6 +2806,203 @@ function reorderItem(sourceDayId, targetDayId, itemType, itemId, targetIndex) {
     saveTravelPlan();
 }
 
+// Expenses functions
+function toggleExpensesView() {
+    const mapContainer = document.querySelector('.map-container');
+    const expensesContainer = document.querySelector('.expenses-container');
+    
+    if (currentView === 'map') {
+        mapContainer.style.display = 'none';
+        expensesContainer.style.display = 'block';
+        currentView = 'expenses';
+        renderExpenses();
+        ensureFx();
+    } else {
+        expensesContainer.style.display = 'none';
+        mapContainer.style.display = 'block';
+        currentView = 'map';
+    }
+}
+
+function openExpenseModal() {
+    populateExpenseDays();
+    document.getElementById('expenseModal').classList.add('show');
+}
+
+function closeExpenseModal() {
+    document.getElementById('expenseModal').classList.remove('show');
+    document.getElementById('expenseForm').reset();
+}
+
+function populateExpenseDays() {
+    const daySelect = document.getElementById('expenseDay');
+    daySelect.innerHTML = '';
+    
+    travelPlan.days.forEach(day => {
+        const option = document.createElement('option');
+        option.value = day.id;
+        option.textContent = `Day ${day.number}: ${day.date}`;
+        daySelect.appendChild(option);
+    });
+}
+
+function saveExpense(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('expenseName').value.trim();
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const currency = document.getElementById('expenseCurrency').value;
+    const dayId = document.getElementById('expenseDay').value;
+    
+    if (!name || isNaN(amount) || !dayId) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    const expense = {
+        id: Date.now(),
+        name,
+        amount,
+        currency,
+        dayId,
+        date: new Date().toISOString()
+    };
+    
+    travelPlan.expenses.push(expense);
+    saveTravelPlan();
+    renderExpenses();
+    closeExpenseModal();
+}
+
+function deleteExpense(expenseId) {
+    if (confirm('Are you sure you want to delete this expense?')) {
+        travelPlan.expenses = travelPlan.expenses.filter(exp => exp.id !== expenseId);
+        saveTravelPlan();
+        renderExpenses();
+    }
+}
+
+function renderExpenses() {
+    const expensesList = document.getElementById('expensesList');
+    const dailyBreakdowns = document.getElementById('dailyBreakdowns');
+    const totalAmount = document.getElementById('totalAmount');
+    const totalCurrency = document.getElementById('totalCurrency');
+    
+    // Sort expenses based on current sort option
+    const sortBy = document.getElementById('sortExpenses').value;
+    let sortedExpenses = [...travelPlan.expenses];
+    
+    if (sortBy === 'day') {
+        sortedExpenses.sort((a, b) => {
+            const dayA = travelPlan.days.find(d => d.id === a.dayId);
+            const dayB = travelPlan.days.find(d => d.id === b.dayId);
+            return (dayA?.number || 0) - (dayB?.number || 0);
+        });
+    } else if (sortBy === 'amount') {
+        sortedExpenses.sort((a, b) => b.amount - a.amount);
+    }
+    
+    // Render expense list
+    expensesList.innerHTML = '';
+    sortedExpenses.forEach(expense => {
+        const day = travelPlan.days.find(d => d.id === expense.dayId);
+        const dayTitle = day ? `Day ${day.number}: ${day.date}` : 'Unknown Day';
+        
+        const expenseItem = document.createElement('div');
+        expenseItem.className = 'expense-item';
+        expenseItem.innerHTML = `
+            <div class="expense-info">
+                <div class="expense-name">${expense.name}</div>
+                <div class="expense-details">${dayTitle} • ${expense.currency}</div>
+            </div>
+            <div class="expense-amount">${expense.amount.toFixed(2)} ${expense.currency}</div>
+            <div class="expense-actions">
+                <button class="btn-small delete" onclick="deleteExpense(${expense.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        expensesList.appendChild(expenseItem);
+    });
+    
+    // Calculate daily breakdowns and total
+    const dailyTotals = {};
+    let totalUSD = 0;
+    
+    travelPlan.expenses.forEach(expense => {
+        const usdAmount = convertToUSD(expense.amount, expense.currency);
+        totalUSD += usdAmount;
+        
+        if (!dailyTotals[expense.dayId]) {
+            dailyTotals[expense.dayId] = { usd: 0, original: 0, currency: expense.currency };
+        }
+        dailyTotals[expense.dayId].usd += usdAmount;
+        dailyTotals[expense.dayId].original += expense.amount;
+    });
+    
+    // Render daily breakdowns
+    dailyBreakdowns.innerHTML = '';
+    Object.keys(dailyTotals).forEach(dayId => {
+        const day = travelPlan.days.find(d => d.id === dayId);
+        const dayTitle = day ? `Day ${day.number}` : 'Unknown Day';
+        
+        const breakdown = document.createElement('div');
+        breakdown.className = 'daily-breakdown';
+        breakdown.innerHTML = `
+            <h4>${dayTitle}</h4>
+            <p>${dailyTotals[dayId].original.toFixed(2)} ${dailyTotals[dayId].currency}</p>
+            <p>≈ ${dailyTotals[dayId].usd.toFixed(2)} USD</p>
+        `;
+        dailyBreakdowns.appendChild(breakdown);
+    });
+    
+    // Update total
+    totalAmount.textContent = totalUSD.toFixed(2);
+    totalCurrency.textContent = 'USD';
+}
+
+function convertToUSD(amount, fromCurrency) {
+    if (fromCurrency === 'USD') return amount;
+    if (!expenseFx.ratesFromUSD || !expenseFx.ratesFromUSD[fromCurrency]) return amount;
+    return amount / expenseFx.ratesFromUSD[fromCurrency];
+}
+
+async function ensureFx(force = false) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (!force && expenseFx.cacheDate === today && expenseFx.ratesFromUSD) {
+        return;
+    }
+    
+    expenseFx.status = 'loading';
+    
+    try {
+        const response = await fetch('https://open.er-api.com/v1/latest/USD');
+        const data = await response.json();
+        
+        expenseFx.ratesFromUSD = data.rates;
+        expenseFx.cacheDate = today;
+        expenseFx.providerDate = data.date;
+        expenseFx.status = 'loaded';
+        
+        renderExpenses(); // Re-render with new rates
+    } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+        expenseFx.status = 'error';
+    }
+}
+
+async function refreshExchangeRates() {
+    const btn = document.getElementById('refreshRatesBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    
+    await ensureFx(true);
+    
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sync"></i> Refresh Rates';
+}
+
 // Global functions (needed for onclick handlers)
 window.openLocationModal = openLocationModal;
 window.editLocation = editLocation;
@@ -2799,4 +3018,5 @@ window.openNoteModal = openNoteModal;
 window.openImportDialog = openImportDialog;
 window.updateTransportMethod = updateTransportMethod;
 window.updateTravelTime = updateTravelTime;
-window.deleteTransport = deleteTransport; 
+window.deleteTransport = deleteTransport;
+window.deleteExpense = deleteExpense; 

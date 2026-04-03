@@ -64,6 +64,9 @@
                     <button class="btn-outline" id="exportBtn">
                         <i class="fas fa-download"></i> Export Plan
                     </button>
+                    <button class="btn-outline" id="expensesBtn">
+                        <i class="fas fa-dollar-sign"></i> Expenses
+                    </button>
                     <button class="btn-outline" id="clearBtn">
                         <i class="fas fa-trash"></i> Clear All
                     </button>
@@ -89,6 +92,36 @@
                     <button class="control-btn" id="toggleTrafficBtn" title="Toggle Traffic">
                         <i class="fas fa-car"></i>
                     </button>
+                </div>
+            </main>
+
+            <!-- Expenses Container -->
+            <main class="expenses-container" style="display: none;">
+                <div class="expenses-header">
+                    <h2>Travel Expenses</h2>
+                    <div class="expenses-controls">
+                        <button class="btn-primary" id="addExpenseBtn">
+                            <i class="fas fa-plus"></i> Add Expense
+                        </button>
+                        <button class="btn-outline" id="refreshRatesBtn">
+                            <i class="fas fa-sync"></i> Refresh Rates
+                        </button>
+                        <select id="sortExpenses">
+                            <option value="day">Sort by Day</option>
+                            <option value="amount">Sort by Amount</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="expenses-summary">
+                    <div class="total-expenses">
+                        <h3>Total: <span id="totalAmount">0.00</span> <span id="totalCurrency">USD</span></h3>
+                    </div>
+                    <div class="daily-breakdowns" id="dailyBreakdowns">
+                        <!-- Daily totals will be inserted here -->
+                    </div>
+                </div>
+                <div class="expenses-list" id="expensesList">
+                    <!-- Expenses will be listed here -->
                 </div>
             </main>
         </div>
@@ -251,5 +284,14 @@
         document.head.appendChild(configScript);
     </script>
     <script src="script.js"></script>
+
+    <!-- Service Worker (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registered:', reg))
+                .catch(err => console.log('SW registration failed:', err));
+        }
+    </script>
 </body>
 </html> 
